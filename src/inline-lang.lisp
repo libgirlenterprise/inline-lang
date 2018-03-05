@@ -7,23 +7,29 @@
 
 (defvar *previous-readtables* nil)
 
-;;; this segment adapted and modified from https://letoverlambda.com/index.cl/guest/chap4.html#sec_3
 (defun |##-reader| (stream sub-char numarg)
   (declare (ignore sub-char numarg))
-  (let (chars)
+  (let ((symbol (read-line stream))
+        chars)
     (do ((prev (read-char stream) curr)
          (curr (read-char stream) (read-char stream)))
         ((and (char= prev #\#) (char= curr #\#)))
       (push prev chars))
-    (coerce (nreverse chars) 'string)))
+    (list (let ((*package* (find-package :inline-lang))
+                (*read-eval* nil))
+            (read-from-string symbol))
+          (coerce (nreverse chars) 'string))))
 
+
+;; will replace with named-readtable
 (defun enable-inline-reader ()
   (push *readtable* *previous-readtables*)
   (setf *readtable* (copy-readtable))
   (set-dispatch-macro-character #\# #\# #'|##-reader|))
 
 (defun disable-inline-reader ()
-  (setf *readtable* (pop *previous-readtables*)))
+  (setf *readtable* (or (pop *previous-readtables*)
+                        *readtable*)))
 
 (defun node (code-str)
   (let ((code-stream (make-string-input-stream code-str)))
