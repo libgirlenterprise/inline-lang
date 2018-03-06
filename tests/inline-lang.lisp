@@ -10,11 +10,11 @@
 
 (inline-lang:enable-inline-syntax)
 
-(is (read-from-string "##node
+(is (read-from-string "##c
 something written in node here.
 ##
 ")
-    `(,(read-from-string "INLINE-LANG::NODE") NIL "something written in node here.
+    `(,(read-from-string "INLINE.C/SRC/C::C") NIL "something written in node here.
 "))
 
 (finalize)

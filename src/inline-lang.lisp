@@ -5,17 +5,20 @@
 
 (defvar *previous-readtables* nil)
 
+(defun module (symbol)
+  (let ((*read-eval* nil))
+    (asdf:load-system (format nil "inline.~(~A~)" symbol))
+    (read-from-string (format nil "inline.~(~A~)::~(~A~)" symbol symbol))))
+
 (defun |##-reader| (stream sub-char numarg)
   (declare (ignore sub-char numarg))
-  (let ((symbol (read-line stream))
-        chars)
+  (let* ((symbol (read-from-string (read-line stream)))
+         chars)
     (do ((prev (read-char stream) curr)
          (curr (read-char stream) (read-char stream)))
         ((and (char= prev #\#) (char= curr #\#)))
       (push prev chars))
-    (list (let ((*package* (find-package :inline-lang))
-                (*read-eval* nil))
-            (read-from-string symbol))
+    (list (module symbol)
           (or *compile-file-pathname*
               *load-pathname*)
           (coerce (nreverse chars) 'string))))
