@@ -1,8 +1,6 @@
 (defpackage inline-lang
   (:use :cl)
-  (:export #:enable-inline-reader
-	   #:disable-inline-reader
-	   #:node))
+  (:export #:enable-inline-syntax))
 (in-package :inline-lang)
 
 (defvar *previous-readtables* nil)
@@ -18,21 +16,14 @@
     (list (let ((*package* (find-package :inline-lang))
                 (*read-eval* nil))
             (read-from-string symbol))
+          (or *compile-file-pathname*
+              *load-pathname*)
           (coerce (nreverse chars) 'string))))
 
-
-;; will replace with named-readtable
-(defun enable-inline-reader ()
-  (push *readtable* *previous-readtables*)
+(defun %enable-inline-syntax ()
   (setf *readtable* (copy-readtable))
   (set-dispatch-macro-character #\# #\# #'|##-reader|))
 
-(defun disable-inline-reader ()
-  (setf *readtable* (or (pop *previous-readtables*)
-                        *readtable*)))
-
-(defun node (code-str)
-  (let ((code-stream (make-string-input-stream code-str)))
-    (uiop:run-program "node"
-		      :input code-stream
-		      :output *standard-output*)))
+(defmacro enable-inline-syntax ()
+  '(eval-when (:compile-toplevel :load-toplevel :execute)
+    (%enable-inline-syntax)))
