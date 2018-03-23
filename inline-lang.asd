@@ -19,4 +19,12 @@
   :long-description
   #.(read-file-string
      (subpathname *load-pathname* "README.markdown"))
-  :in-order-to ((test-op (test-op "inline-lang-test"))))
+  :in-order-to ((test-op (test-op "inline-lang/test"))))
+
+(defsystem "inline-lang/test"
+  :defsystem-depends-on ("prove")
+  :depends-on ("inline-lang")
+  :components ((:module "tests"
+                        :components
+                        ((:test-file "inline-lang"))))
+  :perform (test-op (op c) (symbol-call :prove-asdf :run-test-system c)))
