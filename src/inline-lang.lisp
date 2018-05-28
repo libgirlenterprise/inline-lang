@@ -2,6 +2,7 @@
   (:use :cl)
   (:export #:enable-inline-reader
 	   #:disable-inline-reader
+	   #:define-lang
 	   #:node))
 (in-package :inline-lang)
 
@@ -25,8 +26,12 @@
 (defun disable-inline-reader ()
   (setf *readtable* (pop *previous-readtables*)))
 
-(defun node (code-str)
-  (let ((code-stream (make-string-input-stream code-str)))
-    (uiop:run-program "node"
-		      :input code-stream
-		      :output *standard-output*)))
+(defmacro define-lang (name program-str)
+  (let ((gcode-str (gensym "code-str")))
+    `(defun ,name (,gcode-str)
+       (let ((code-stream (make-string-input-stream ,gcode-str)))
+	 (uiop:run-program ,program-str
+			   :input code-stream
+			   :output *standard-output*)))))
+
+(define-lang node "node")
